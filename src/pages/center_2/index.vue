@@ -40,7 +40,7 @@ export default {
     this.$store.commit('saveData', { name: 'pageTypeText', obj: pageTypeText })
 
     // /* 开发：直接调用下一步的回调数据 */
-    // const { itemMapList, nodeMapList } = JSON.parse(localStorage.getItem('asd'))
+    // const { itemMapList, nodeMapList } = JSON.parse(localStorage.getItem('投产排产节点提报：下一步'))
     // this.$store.commit('saveData', { name: 'next_nodeMapList', obj: nodeMapList })
     // const arr = []
     // itemMapList.forEach(function (item) {
