@@ -38,30 +38,42 @@
       <el-table-column v-for="item in next_nodeMapList" :key="'node_' + item.node_id" :label="item.node_name" :column-key="item.node_id" width="150">
         <template slot-scope="scope">
           <div v-if="scope.row[item.node_id]">
-            <!-- 单行 -->
+            <!-- 计划完成 -->
             <div v-if="!(scope.row.index % 2)">
-              <!-- 单行：用户提报 -->
+              <!-- 计划完成：用户提报 -->
               <div v-if="scope.row[item.node_id].submit_type === 2">
                 <el-popover popper-class="comPopover" :visible-arrow="false" placement="left" trigger="focus" :content="scope.row[item.node_id].maxMinText">
-                  <el-input class="comInput" :class="scope.row[item.node_id].error ? 'errorPicker' : ''" slot="reference" size="mini" placeholder="请输入日期"
-                    v-model="scope.row[item.node_id].first_plant_enddate" @focus="focus" @blur="blur"
+                  <el-input class="comInput" :class="scope.row[item.node_id].error ? 'errorInput' : ''" slot="reference" size="mini" placeholder="请输入日期"
+                    v-model="scope.row[item.node_id].first_plant_enddate" @blur="blur"
                   ></el-input>
                 </el-popover>
               </div>
+              <!-- 计划完成：系统计算 -->
+              <div class="hover" v-if="scope.row[item.node_id].submit_type === 1" @click="edit(scope.row, item.node_id)">
+                <span :class="scope.row[item.node_id].error ? 'red' : ''">{{scope.row[item.node_id].first_plant_enddate}}</span>
+                <i class="el-icon-warning warningIcon" v-if="scope.row[item.node_id].error"></i>
+              </div>
               <!-- 单行：系统计算 && 异常 -->
-              <div v-if="scope.row[item.node_id].submit_type === 1 && scope.row[item.node_id].error">
+              <!-- <div v-if="scope.row[item.node_id].submit_type === 1 && scope.row[item.node_id].error">
                 <span class="red">{{scope.row[item.node_id].first_plant_enddate}}</span>
                 <i class="el-icon-warning warningIcon hover" v-if="scope.row[item.node_id].error" @click="edit(scope.row, item.node_id)"></i>
-              </div>
+              </div> -->
               <!-- 单行：系统计算 && 正常 -->
-              <div v-if="scope.row[item.node_id].submit_type === 1 && !scope.row[item.node_id].error">
+              <!-- <div v-if="scope.row[item.node_id].submit_type === 1 && !scope.row[item.node_id].error">
                 <span class="hover" @dblclick="edit(scope.row, item.node_id)">{{scope.row[item.node_id].first_plant_enddate}}</span>
-              </div>
+              </div> -->
             </div>
-            <!-- 双行 -->
+            <!-- 本次调整 -->
             <span v-else>
               <div v-if="scope.row[item.node_id].submit_type === 2 && scope.row[item.node_id].error">
-                <el-input class="comInput" :class="scope.row[item.node_id].error ? 'errorPicker' : ''" v-model="scope.row[item.node_id].item_node_change.abnormal_reason" size="mini" placeholder="请输入异常原因"></el-input>
+                <el-input class="comInput" :class="scope.row[item.node_id].error ? 'errorInput' : ''" size="mini" placeholder="请输入异常原因"
+                  v-model="text[`${scope.$index}_${item.node_id}`]" @blur="blur('abnormal_reason', $event, scope.row, item.node_id)"
+                ></el-input>
+                <!-- scope.row[item.node_id].item_node_change.abnormal_reason -->
+
+                <!-- <el-input class="comInput" :class="scope.row[item.node_id].error ? 'errorInput' : ''" slot="reference" size="mini" placeholder="请输入日期"
+                  v-model="scope.row[item.node_id].first_plant_enddate" @blur="blur"
+                ></el-input> -->
               </div>
               <div v-else style="text-align: left;">
                 <p v-if="scope.row[item.node_id].item_node_change && scope.row[item.node_id].item_node_change.change_plan_time">
@@ -100,8 +112,18 @@
         <div class="lineLabel">调整后日期：</div>
         <div class="lineText">
           <el-input class="comInput" :disabled="d_data.is_change === 0 ? true : false" slot="reference" size="mini" placeholder="请输入日期"
-            v-model="d_data.change_plan_time" @focus="focus" @blur="blur('change_plan_time', $event)"
+            v-model="d_data.change_plan_time" @blur="blur('change_plan_time', $event)"
           ></el-input>
+        </div>
+      </div>
+      <div class="lineBox">
+        <div class="lineLabel">日期最小值：</div>
+        <div class="lineText">
+          {{d_data.min_plant_enddate}}
+        </div>
+        <div class="lineLabel">日期最大值：</div>
+        <div class="lineText">
+          {{d_data.max_plant_enddate}}
         </div>
       </div>
       <div class="lineBox">
@@ -129,6 +151,7 @@ export default {
   },
   data() {
     return {
+      text: {},
       /* 弹出层 */
       dialogVisible: false, // 弹出层：是否显示
       d_data: {}, //           弹出层：数据
@@ -141,12 +164,14 @@ export default {
     ...mapGetters(['next_list'])
   },
   methods: {
-    focus() {
-      this.$store.commit('saveData', { name: 'isComputed_2', obj: false })
-    },
-    blur(name, event) {
+    blur(name, event, row, nodeId) {
       if (name === 'change_plan_time') {
         this.d_data.change_plan_time = this._toggleTime(event.target.value)
+      }
+      if (name === 'abnormal_reason') {
+        const { next_itemMapList } = this
+        const { index } = row
+        next_itemMapList[(index - 1) / 2][nodeId].item_node_change.abnormal_reason = event.target.value
       }
       this.$store.commit('saveData', { name: 'isComputed_2', obj: true })
     },
@@ -156,9 +181,9 @@ export default {
      * @param {[String]} nodeId 当前列（节点）ID
      */
     edit(row, nodeId) {
-      // console.log(row)
+      // console.log(row.index)
       const { index, item_name } = row
-      const { error, verification_remark, item_node_change: { is_change, change_plan_time, abnormal_reason } } = row[nodeId]
+      const { error, verification_remark, item_node_change: { is_change, change_plan_time, abnormal_reason }, min_plant_enddate, max_plant_enddate, is_quote } = row[nodeId]
       const title = error ? '节点异常处理' : '节点编辑'
       const { next_nodeMapList, pageTypeText } = this
       let nodeName = ''
@@ -185,8 +210,11 @@ export default {
         nodeId, //              节点ID
         node_name, //           当前异常节点
         first_plant_enddate, // 系统计算日期
+        min_plant_enddate, //   日期最小值
+        max_plant_enddate, //   日期最大值
         abnormal_reason, //     异常原因
         is_change, //           是否调整日期
+        is_quote, //            是否被引用
         change_plan_time, //    调整后日期
         verification_remark //  调整/异常原因
       }
@@ -199,23 +227,29 @@ export default {
     submit() {
       const that = this
       const { d_data, next_itemMapList } = this
-      const { index, nodeId, first_plant_enddate, abnormal_reason, is_change } = d_data
-      if (abnormal_reason) {
-        const change_plan_time = is_change === 0 ? '' : d_data.change_plan_time // 不调整：调整后日期为空
-        next_itemMapList[index][nodeId].first_plant_enddate = is_change === 0 ? first_plant_enddate : change_plan_time
-        next_itemMapList[index][nodeId].item_node_change = Object.assign({}, { abnormal_reason, change_plan_time, frist_plan_time: first_plant_enddate, is_change })
-        /* 根据验证结果，处理事件 */
-        setTimeout(function () {
-          const { isSubmit } = that.$store.state
-          if (isSubmit) {
-            that.dialogVisible = false
-            // that.$message({ message: '保存成功', type: 'success', duration: 1000 })
-            next_itemMapList[index][nodeId].isProving = true
-          }
-        }, 0)
-      } else {
-        this.$message.error('请填写调整/异常原因')
+      const { index, nodeId, first_plant_enddate, change_plan_time, abnormal_reason, is_change, is_quote } = d_data
+      /* ----- 验证 ----- */
+      /* 报错：没写'调整/异常原因' */
+      if (!abnormal_reason) {
+        this.$message({ showClose: true, message: '请填写 调整/异常原因 后再保存', type: 'warning' })
+        return false
       }
+      /* 报错：变更 && 被引用 && （时间 === '' || 时间 === '/'） */
+      if (is_change === 1 && is_quote === 1 && (change_plan_time === '' || change_plan_time === '/')) {
+        this.$message({ showClose: true, message: '此节点被其他节点引用，不能为空或/', type: 'warning' })
+        return false
+      }
+      /* 报错：变更 && （没写时间 || 之前时间 === 当前时间） */
+      if (is_change === 1 && (!change_plan_time || first_plant_enddate === change_plan_time)) {
+        this.$message({ showClose: true, message: '请选择 调整日期 后再保存', type: 'warning' })
+        return false
+      }
+      /* ----- 保存 ----- */
+      const change_plan_time_2 = is_change === 0 ? '' : change_plan_time // 不调整：调整后日期为空
+      next_itemMapList[index / 2][nodeId].first_plant_enddate = is_change === 0 ? first_plant_enddate : change_plan_time_2
+      next_itemMapList[index / 2][nodeId].item_node_change = Object.assign({}, { abnormal_reason, change_plan_time: change_plan_time_2, frist_plan_time: first_plant_enddate, is_change })
+      that.dialogVisible = false
+      next_itemMapList[index / 2][nodeId].isProving = true
     },
     /**
      * [表格：合并行]
@@ -384,8 +418,8 @@ export default {
   max-width: 400px !important;
 }
 
-/*** 时间选择器：报错 ***/
-.errorPicker > input {
+/*** 输入框：报错 ***/
+.errorInput > input {
   color: #F56C6C !important;
   border-color: #F56C6C !important;
 }

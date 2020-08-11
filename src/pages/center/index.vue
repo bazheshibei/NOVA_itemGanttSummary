@@ -32,7 +32,7 @@ export default {
     }
   },
   created() {
-    const { type = 1 } = JSON.parse(localStorage.getItem('sumittcpcGanttSummaryType')) || {}
+    const { type = 1 } = JSON.parse(localStorage.getItem('sumittcpcGanttSummaryType') || '{}')
     this.$store.commit('saveData', { name: 'pageType', obj: type })
     /** 计算：表格高度 **/
     this._countHeight()

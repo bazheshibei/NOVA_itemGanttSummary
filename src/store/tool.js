@@ -1,5 +1,5 @@
 
-import { Message } from 'element-ui'
+// import { Message } from 'element-ui'
 
 const Tool = {}
 
@@ -52,82 +52,48 @@ Tool.returnDatalist = function (list = [], nodeList = []) {
 Tool.next_list = function (list = [], isComputed_2, state) {
   const that = this
   const arr = []
-  let isSubmit = true
-  list.forEach(function (item, index) {
-    let nodeCodeObj = {} // 当前项目的节点值 { ${变量}: 自身时间 }
-    /* --- 处理节点数据 --- */
-    item.nodeTemplateMapList.map(function (node) {
-      /* 验证：是否可清空 */
-      if (!node.first_plant_enddate) {
-        /** 报错：用到此节点 **/
-        const { status, time, name } = that._isUsed(list[index].nodeList_0, node.node_code)
-        if (status) {
-          Message({ showClose: true, message: `此节点已被 ${name} 引用，请勿置空`, type: 'warning' })
-          node.first_plant_enddate = time
-          isSubmit = false
-        }
-      }
-      /* 验证：弹出层，是否可保存 */
-      const { frist_plan_time, abnormal_reason, is_change, change_plan_time } = node.item_node_change
-      if (frist_plan_time) {
-        /* 报错：没写'调整/异常原因 后再保存' */
-        if (!abnormal_reason) {
-          Message({ showClose: true, message: '请填写 调整/异常原因 后再保存', type: 'warning' })
-          isSubmit = false
-        }
-        /* 报错：变更，没选调整后日期 */
-        if (is_change === 1 && !change_plan_time) {
-          Message({ showClose: true, message: '请选择 调整后日期 后再保存', type: 'warning' })
-          isSubmit = false
-        }
-        /* 报错：系统计算日期 === 调整后日期 */
-        if (frist_plan_time === change_plan_time) {
-          Message({ showClose: true, message: '系统计算日期 不能等于 调整后日期', type: 'warning' })
-          isSubmit = false
-        }
-        /* 还原：系统计算日期 */
-        if (!isSubmit) {
-          let time = ''
-          for (let i = 0; i < list[index].nodeList_0.length; i++) {
-            const data = list[index].nodeList_0[i]
-            if (data.node_id === node.node_id) {
-              time = data.first_plant_enddate
-            }
-          }
-          node.first_plant_enddate = time
-        }
-      }
-      /* 提取：nodeCodeObj */
-      nodeCodeObj['${' + node.node_code + '}'] = node.first_plant_enddate
-      /* 转换：处理时间格式 */
-      node.first_plant_enddate = isComputed_2 ? that._toggleTime(node.first_plant_enddate) : node.first_plant_enddate
-      /** 验证：计划事件是否在区间内 **/
-      node.error = that._isError(node.max_plant_enddate, node.min_plant_enddate, node.first_plant_enddate)
-      /* 正常数据：置空异常原因 */
-      node.item_node_change.abnormal_reason = node.error ? node.item_node_change.abnormal_reason : ''
-      /* 提取 */
-      item[node.node_id] = node // Object.assign({}, node) 的话，双向绑定改变 item[node.node_id] 中的独立值，不会触发计算属性。node 的话会改变 nodeTemplateMapList 下的引用属性
+  if (isComputed_2) {
+    list.forEach(function (item, index) {
+      const { order_time, deliver_date } = item // 下单日期，客人交期
+      let nodeCodeObj = {} // 当前项目的节点值 { ${变量}: 自身时间 }
+      /* --- 处理节点数据 --- */
+      item.nodeTemplateMapList.map(function (node, nodeIndex) {
+        const data = item[node.node_id] ? item[node.node_id] : node
+        const { first_plant_enddate, max_plant_enddate, min_plant_enddate } = data
+        const now = that._toggleTime(first_plant_enddate)
+        /* 提取：nodeCodeObj */
+        nodeCodeObj['${' + data.node_code + '}'] = now
+        /* 转换：处理时间格式 */
+        data.first_plant_enddate = now
+        /** 验证：计划事件是否在区间内 **/
+        data.error = that._isError(max_plant_enddate, min_plant_enddate, now, order_time, deliver_date).status
+        /* 正常数据：置空异常原因 */
+        data.item_node_change.abnormal_reason = data.error ? data.item_node_change.abnormal_reason : ''
+        /* 提取 */
+        item[data.node_id] = Object.assign({}, data)
+      })
+      /* 合并其他变量值 */
+      nodeCodeObj = Object.assign({}, item.clacNodeMap, nodeCodeObj)
+      /* 重新计算：最大值、最小值 */
+      item.nodeTemplateMapList.map(function (node) {
+        const { max_section_value, min_section_value, node_id } = node
+        /** 公式 转 时间 **/
+        const max = that._returnTime(max_section_value, nodeCodeObj) || deliver_date
+        const min = that._returnTime(min_section_value, nodeCodeObj) || order_time
+        item[node_id].max_plant_enddate = max
+        item[node_id].min_plant_enddate = min
+        item[node_id].maxMinText = `最早：${min}，最晚：${max}`
+      })
+      /* --- 拆分成两条数据 --- */
+      const obj_1 = Object.assign({}, item, { index: index * 2 }) //     计划完成
+      arr.push(obj_1)
+      const obj_2 = Object.assign({}, item, { index: index * 2 + 1 }) // 本次调整
+      arr.push(obj_2)
     })
-    /* 合并其他变量值 */
-    nodeCodeObj = Object.assign({}, item.clacNodeMap, nodeCodeObj)
-    /* 重新计算：最大值、最小值 */
-    item.nodeTemplateMapList.map(function (node) {
-      const { max_section_value, min_section_value, node_id } = node
-      /** 公式 转 时间 **/
-      const max = that._returnTime(max_section_value, nodeCodeObj)
-      const min = that._returnTime(min_section_value, nodeCodeObj)
-      item[node_id].max_plant_enddate = max
-      item[node_id].min_plant_enddate = min
-      item[node_id].maxMinText = `最早：${min}，最晚：${max}`
-    })
-    /* --- 拆分成两条数据 --- */
-    const obj_1 = Object.assign({}, item, { index: index * 2 }) //     计划完成
-    arr.push(obj_1)
-    const obj_2 = Object.assign({}, item, { index: index * 2 + 1 }) // 本次调整
-    arr.push(obj_2)
-  })
-  state.isSubmit = isSubmit
-  return arr
+    return arr
+  } else {
+    return list
+  }
 }
 
 /**
@@ -146,6 +112,7 @@ Tool.submitProving = function (list = [], nodes = []) {
     nodeNameObj[item.node_id] = item.node_name
   })
   /* 循环数据 */
+  console.log('xxxxx ----- ', list)
   list.forEach(function (item) {
     /* 基础数据 */
     const { node_template_id, item_id, item_name, item_gantt_id = '', p_item_gantt_id = '', system_material_statistics_id = '', plant_id = '' } = item
@@ -158,36 +125,33 @@ Tool.submitProving = function (list = [], nodes = []) {
       nodeObj[val_0.node_id] = val_0
     })
     /* 提取：表格数据 */
-    item.nodeTemplateMapList.forEach(function (val) {
-      const { isProving = false, error, node_id, first_plant_enddate, node_template_detail_id, min_plant_enddate, max_plant_enddate, item_team_id = '', node_charge_person = '', item_node_change } = val
-      const nodeData = { node_id, first_plant_enddate, node_template_detail_id, min_plant_enddate, max_plant_enddate, item_team_id, node_charge_person, item_node_change }
-      if (isProving) {
-        /* 通过弹出层验证过的节点 */
-        data.nodedatalist.push(nodeData)
-      } else {
-        if (first_plant_enddate && first_plant_enddate === nodeObj[node_id].first_plant_enddate) {
-          /* timePicker 手动修改的节点：没变更 */
-          nodeData.item_node_change = Object.assign({}, { frist_plan_time: '', abnormal_reason: '', is_change: 0, change_plan_time: '' })
-          data.nodedatalist.push(nodeData)
+    for (const x in item) {
+      const val = item[x]
+      if (val instanceof Object && val.node_id) {
+        const { error, node_id, first_plant_enddate, node_template_detail_id, min_plant_enddate, max_plant_enddate, item_team_id = '', node_charge_person = '', item_node_change } = val
+        const nodeData = { node_id, first_plant_enddate, node_template_detail_id, min_plant_enddate, max_plant_enddate, item_team_id, node_charge_person, item_node_change }
+        if (!error && first_plant_enddate === nodeObj[node_id].first_plant_enddate) {
+          /* 没报错 && 调整后时间 === 原始时间 */
+        } else if (error && !item_node_change.abnormal_reason) {
+          /* 报错 && 没写异常原因 */
+          if (!nameObj[item_id]) {
+            nameObj[item_id] = { name: item_name, arr: [] }
+          }
+          nameObj[item_id].arr.push(nodeNameObj[node_id])
         } else {
-          /* timePicker 手动修改的节点：变更 */
+          /* 添加数据 */
           const frist_plan_time = nodeObj[node_id].first_plant_enddate
           const { abnormal_reason } = item_node_change
           const is_change = 1
           const change_plan_time = first_plant_enddate
           nodeData.item_node_change = Object.assign({}, { frist_plan_time, abnormal_reason, is_change, change_plan_time })
           data.nodedatalist.push(nodeData)
-          /* 异常处理：异常 && 没写异常原因 */
-          if (error && !abnormal_reason) {
-            if (!nameObj[item_id]) {
-              nameObj[item_id] = { name: item_name, arr: [] }
-            }
-            nameObj[item_id].arr.push(nodeNameObj[node_id])
-          }
         }
       }
-    })
-    datalist.push(data)
+    }
+    if (data.nodedatalist.length) {
+      datalist.push(data)
+    }
   })
   const itemids = idArr.join(',')
   return { itemids, datalist, nameObj }
@@ -198,7 +162,7 @@ Tool.submitProving = function (list = [], nodes = []) {
  * @param {[String]} str         公式
  * @param {[Object]} nodeCodeObj 当前项目的节点值 { ${变量}: 自身时间 }
  */
-Tool._returnTime = function (str, nodeCodeObj) {
+Tool._returnTime = function (str = '', nodeCodeObj = {}) {
   /* 替换：变量、常量 */
   const numStr = str.replace(/[0-9]+/g, function (num) {
     return parseInt(num) * 60 * 60 * 24 * 1000
@@ -207,11 +171,18 @@ Tool._returnTime = function (str, nodeCodeObj) {
   })
   /* 毫秒数 转 时间 */
   // eslint-disable-next-line
-  const d = new Date(eval(numStr))
-  const year = d.getFullYear()
-  const month = d.getMonth() + 1 < 10 ? '0' + (d.getMonth() + 1) : d.getMonth() + 1
-  const day = d.getDate() < 10 ? '0' + d.getDate() : d.getDate()
-  return `${year}-${month}-${day}`
+  const timeStr = eval(numStr)
+  if (isNaN(timeStr)) {
+    return ''
+  } else if (new Date(timeStr).getTime() < new Date('2000-01-01').getTime()) {
+    return ''
+  } else {
+    const d = new Date(timeStr)
+    const year = d.getFullYear()
+    const month = d.getMonth() + 1 < 10 ? '0' + (d.getMonth() + 1) : d.getMonth() + 1
+    const day = d.getDate() < 10 ? '0' + d.getDate() : d.getDate()
+    return `${year}-${month}-${day}`
+  }
 }
 /**
  * [转换：处理时间格式]
@@ -270,42 +241,37 @@ Tool._toggleTime = function (time) {
 }
 /**
  * [验证：计划事件是否在区间内]
- * @param {[String]} maxVal   最大值
- * @param {[String]} minVal   最小值
- * @param {[String]} plantVal 计划事件
+ * @param {[String]} maxVal       最大值
+ * @param {[String]} minVal       最小值
+ * @param {[String]} plantVal     计划时间
+ * @param {[String]} order_time   下单日期
+ * @param {[String]} deliver_date 交货日期
  */
-Tool._isError = function (maxVal, minVal, plantVal) {
-  const max = new Date(maxVal).getTime()
-  const min = new Date(minVal).getTime()
-  const plant = new Date(plantVal).getTime()
-  if (min <= plant && plant <= max) {
-    return false
+Tool._isError = function (maxVal = '', minVal = '', plantVal = '', order_time = '', deliver_date = '') {
+  const max = isNaN(new Date(maxVal).getTime()) ? 0 : new Date(maxVal).getTime() //       最大值
+  const min = isNaN(new Date(minVal).getTime()) ? 0 : new Date(minVal).getTime() //       最小值
+  const plant = isNaN(new Date(plantVal).getTime()) ? 0 : new Date(plantVal).getTime() // 计划时间
+  const order = new Date(order_time).getTime() //                                         下单日期
+  const deliver = new Date(deliver_date).getTime() //                                     交货日期
+  const num_1 = min || order //   边界值：最小
+  const num_2 = max || deliver // 边界值：最大
+  const time_1 = this._returnYearMonthDay(num_1)
+  const time_2 = this._returnYearMonthDay(num_2)
+  if (num_1 && num_2 && (num_1 <= plant && plant <= num_2)) {
+    return { status: false, maxMinText: `最早：${time_1}，最晚：${time_2}` }
   } else {
-    return true
+    return { status: true, maxMinText: `最早：${time_1}，最晚：${time_2}` }
   }
 }
 /**
- * [验证：是否用到此节点]
- * @param {[Array]}  nodeList_0 单条原始节点数据
- * @param {[String]} node_code  节点 code
+ * [提取：年月日]
  */
-Tool._isUsed = function (nodeList_0 = [], node_code) {
-  let status = false
-  let time = ''
-  const nameArr = []
-  nodeList_0.forEach(function (item) {
-    /* 是否引用 */
-    const { max_section_value, min_section_value, sys_clac_formula } = item // 计算公式：最大值，最小值，自身
-    if (item.node_code !== node_code && (max_section_value.indexOf(node_code) > -1 || min_section_value.indexOf(node_code) > -1 || sys_clac_formula.indexOf(node_code) > -1)) {
-      status = true
-      nameArr.push(item.node_name)
-    }
-    /* 原始时间 */
-    if (item.node_code === node_code) {
-      time = item.first_plant_enddate
-    }
-  })
-  return { status, time, name: nameArr.join('、') }
+Tool._returnYearMonthDay = function (strOrNum) {
+  const d = new Date(strOrNum)
+  const year = d.getFullYear()
+  const month = d.getMonth() + 1 < 10 ? '0' + (d.getMonth() + 1) : d.getMonth() + 1
+  const day = d.getDate() < 10 ? '0' + d.getDate() : d.getDate()
+  return `${year}-${month}-${day}`
 }
 
 export default Tool
