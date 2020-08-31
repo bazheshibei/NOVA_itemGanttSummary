@@ -2,8 +2,7 @@
 // 发送请求
 import Axios from 'axios'
 import Qs from 'qs'
-import { Loading } from 'element-ui'
-// import { MessageBox, Loading } from 'element-ui'
+import { MessageBox, Loading } from 'element-ui'
 
 /**
  * [全局配置]
@@ -49,13 +48,19 @@ const HTTP = function (param) {
   /* 发起请求 */
   Axios({ method, url, data: Qs.stringify(data), timeout: 0 })
     .then(function (res) {
-      suc(res.data.data)
+      const { data, msg, status } = res.data
+      if (String(status) === '0') {
+        MessageBox({ title: '数据异常', message: msg, type: 'warning', closeOnClickModal: false, closeOnPressEscape: false })
+      }
+      suc(data)
       /* 以服务的方式调用的 Loading 需要异步关闭 */
       if (loading) {
         loadingInstance.close()
       }
     })
     .catch(function (res) {
+      // // eslint-disable-next-line
+      // MessageBox({ title: '数据异常', message: msg, type: 'warning', closeOnClickModal: false, closeOnPressEscape: false, callback() { dg.close() } })
       err(res)
       /* 以服务的方式调用的 Loading 需要异步关闭 */
       if (loading) {

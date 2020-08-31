@@ -14,11 +14,9 @@
       <div class="formTextBox">
         <div class="formText">
           <span>本次提报项目：</span>
-          <el-popover popper-class="comPopover" :visible-arrow="false" placement="bottom" trigger="hover" :content="itenames">
-            <el-input class="comInput" size="mini" :value="itenames" disabled slot="reference">
-              <el-button slot="append" @click="chooseProject">选择项目</el-button>
-            </el-input>
-          </el-popover>
+          <el-input class="comInput" size="mini" :value="itenames" disabled slot="reference">
+            <el-button slot="append" @click="chooseProject">选择项目</el-button>
+          </el-input>
           <span>&nbsp;&nbsp;&nbsp;&nbsp;</span>
           <el-button type="primary" size="mini" @click="createdTable">创建</el-button>
           <span>&nbsp;&nbsp;&nbsp;&nbsp;</span>

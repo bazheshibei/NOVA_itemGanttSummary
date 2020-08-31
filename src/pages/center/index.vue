@@ -1,5 +1,5 @@
 
-<!-- 自定义统计 -->
+<!-- 提报 -->
 
 <template>
   <div class="pageBox" v-on:scroll="pageScroll" ref="page">
@@ -39,15 +39,19 @@ export default {
     /** 请求：页面初始化数据 **/
     this.$store.dispatch('A_getItemNodeTemple', {})
 
-    // /* 平台方法 */
-    // // eslint-disable-next-line
-    // dg.removeBtn('cancel')
-    // // eslint-disable-next-line
-    // dg.removeBtn('saveAndAdd')
-    // // eslint-disable-next-line
-    // dg.removeBtn('saveAndClose')
-    // // eslint-disable-next-line
-    // dg.removeBtn('saveNoClose')
+    try {
+      /* 平台方法 */
+      // eslint-disable-next-line
+      dg.removeBtn('cancel')
+      // eslint-disable-next-line
+      dg.removeBtn('saveAndAdd')
+      // eslint-disable-next-line
+      dg.removeBtn('saveAndClose')
+      // eslint-disable-next-line
+      dg.removeBtn('saveNoClose')
+    } catch (err) {
+      //
+    }
   },
   methods: {
     /**

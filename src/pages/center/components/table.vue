@@ -4,9 +4,7 @@
 <template>
   <div class="comTableBox" ref="comTableBox">
 
-    <el-table class="comTable" :data="projectList" size="mini" border :height="tableHeight"
-      v-for="(table, tableIndex) in tableArr" :key="'table_' + table" v-show="tableIndex === tableArr.length - 1"
-    >
+    <el-table class="comTable" :data="projectList" size="mini" border :height="tableHeight">
       <!-- 操作 -->
       <el-table-column label="操作" width="80">
         <template slot-scope="scope">
@@ -60,7 +58,7 @@ export default {
     }
   },
   computed: {
-    ...mapState(['projectList', 'nodeMapList', 'tableArr'])
+    ...mapState(['projectList', 'nodeMapList'])
   },
   methods: {
     blur(index, name) {
@@ -87,8 +85,6 @@ export default {
       projectList.splice(index, 1)
       /** 保存数据 **/
       this.$store.commit('saveData', { name: 'projectList', obj: projectList })
-      /** 创建新表格 **/
-      this.$store.commit('createdNewTable')
     },
     _toggleTime(time) {
       if (time === '/') {

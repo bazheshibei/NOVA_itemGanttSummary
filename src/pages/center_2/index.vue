@@ -1,5 +1,5 @@
 
-<!-- 自定义统计 -->
+<!-- 生成 -->
 
 <template>
   <div class="pageBox" ref="page">
@@ -31,37 +31,30 @@ export default {
     /** 计算：表格高度 **/
     this._countHeight()
 
-    /* 表格类型 */
-    const local = JSON.parse(localStorage.getItem('NOVA_itemGanttType')) || {}
-    const typeObj = { '1': '大货甘特表汇总', '1.1': '排产前节点', '1.2': '投产节点', '2': '大货面料甘特表汇总', '3': '大货工厂甘特表' }
-    const { pageType = '1' } = local
-    const pageTypeText = typeObj[pageType] || ''
-    this.$store.commit('saveData', { name: 'pageType', obj: pageType })
-    this.$store.commit('saveData', { name: 'pageTypeText', obj: pageTypeText })
-
+    // /* 表格类型 */
+    // const local = JSON.parse(localStorage.getItem('NOVA_itemGanttType')) || {}
+    // const typeObj = { '1': '大货甘特表汇总', '1.1': '排产前节点', '1.2': '投产节点', '2': '大货面料甘特表汇总', '3': '大货工厂甘特表' }
+    // const { pageType = '1' } = local
+    // const pageTypeText = typeObj[pageType] || ''
+    // this.$store.commit('saveData', { name: 'pageType', obj: pageType })
+    // this.$store.commit('saveData', { name: 'pageTypeText', obj: pageTypeText })
+    //
     // /* 开发：直接调用下一步的回调数据 */
     // const { itemMapList, nodeMapList } = JSON.parse(localStorage.getItem('投产排产节点提报：下一步'))
     // this.$store.commit('saveData', { name: 'next_nodeMapList', obj: nodeMapList })
-    // const arr = []
-    // itemMapList.forEach(function (item) {
-    //   const obj = {}
+    // itemMapList.map(function (item) {
     //   for (const x in item) {
-    //     obj[x] = item[x]
     //     if (x === 'nodeTemplateMapList') {
-    //       /* 节点异常处理记录 */
-    //       //                         提报时的时间           调整/异常原因              是否调整        调整后的时间
-    //       const item_node_change = { frist_plan_time: '', abnormal_reason: '', is_change: 0, change_plan_time: '' }
-    //       /* 复制一份 nodeTemplateMapList：①用于对比是否改变过值 ②独立数据，不会随组件改变 */
-    //       obj.nodeList_0 = []
-    //       item[x].map(function (node) {
-    //         node.item_node_change = Object.assign({}, item_node_change)
-    //         obj.nodeList_0.push(Object.assign({}, node))
+    //       item[x].map(function (data) {
+    //         const { first_plant_enddate } = data
+    //         //                         提报时的时间                            调整/异常原因         是否调整       调整后的时间
+    //         const item_node_change = { frist_plan_time: first_plant_enddate, change_remaark: '', is_change: 0, change_plan_time: '' }
+    //         data.item_node_change = item_node_change
     //       })
     //     }
     //   }
-    //   arr.push(obj)
     // })
-    // this.$store.commit('saveData', { name: 'next_itemMapList', obj: arr })
+    // this.$store.commit('saveData', { name: 'next_itemMapList', obj: itemMapList })
   },
 
   methods: {

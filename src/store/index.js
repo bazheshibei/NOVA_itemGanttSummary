@@ -16,12 +16,13 @@ const store = new Vuex.Store({
     itemids: '', //          所有项目id
     projectList: [], //      项目列表
     nodeMapList: [], //      节点列表
-    tableArr: ['asd'], //    表格列表
-    addProjectList: [], //   选择项目
     /* 第二页 */
+    showTableArr: [], //     展示的表格列表
     isComputed_2: true, //   是否触发：计算第二页数据
     next_itemMapList: [], // 项目节点信息
-    next_nodeMapList: [] //  表头节点信息
+    next_nodeMapList: [], // 表头节点信息
+    /* 计算依据 */
+    changeIndexId: '' //     修改的数据索引及节点ID '4_2c9xadw244'
   },
 
   getters: {
@@ -30,10 +31,9 @@ const store = new Vuex.Store({
      * @page 第二页
      */
     next_list(state) {
-      const { next_itemMapList, isComputed_2 } = state
+      const { next_itemMapList, isComputed_2, changeIndexId } = state
       if (isComputed_2) {
-        const arr = Tool.next_list(next_itemMapList, isComputed_2, state)
-        // console.log('第二页数据 ----- ', arr)
+        const arr = Tool.next_list(next_itemMapList, isComputed_2, changeIndexId)
         state.isComputed_2 = false
         return arr
       }
@@ -60,12 +60,6 @@ const store = new Vuex.Store({
     saveData(state, params) {
       const { name, obj } = params
       state[name] = obj
-    },
-    /**
-     * [创建新表格]
-     */
-    createdNewTable(state) {
-      state.tableArr.push(new Date().getTime())
     }
   },
 
@@ -77,7 +71,7 @@ const store = new Vuex.Store({
     A_getItemNodeTemple({ state, commit, getters }, { status = '初始化' }) {
       // /* ----- 本地数据 ----- */
       // const res = JSON.parse(localStorage.getItem('投产排产节点提报：页面初始化数据'))
-      // console.log('xxxxx ----- ', res)
+      // console.log('投产排产节点提报：页面初始化数据 ----- ', res)
       // //
       // const { itemMapList, nodeMapList, itemids } = res
       // /* 提取节点数据 */
@@ -110,10 +104,6 @@ const store = new Vuex.Store({
       // } else {
       //   /* 初始化时，直接赋值 */
       //   state.projectList = itemMapList
-      // }
-      // /* 创建时，刷新表格 */
-      // if (status === '创建') {
-      //   commit('createdNewTable') // 创建新表格
       // }
 
       const { pageType, itemids } = state
@@ -160,10 +150,6 @@ const store = new Vuex.Store({
           /* 初始化时，直接赋值 */
           state.projectList = itemMapList
         }
-        /* 创建时，刷新表格 */
-        if (status === '创建') {
-          commit('createdNewTable') // 创建新表格
-        }
       }
       Api({ name, obj, loading, suc })
     },
@@ -177,39 +163,36 @@ const store = new Vuex.Store({
       // //
       // const { itemMapList, nodeMapList } = res
       // state.next_nodeMapList = nodeMapList // 表头节点信息
-      // const arr = []
-      // itemMapList.forEach(function (item) {
-      //   const obj = {}
+      // itemMapList.map(function (item) {
       //   for (const x in item) {
-      //     obj[x] = item[x]
       //     if (x === 'nodeTemplateMapList') {
-      //       /* 节点异常处理记录 */
-      //       //                         提报时的时间           调整/异常原因              是否调整        调整后的时间
-      //       const item_node_change = { frist_plan_time: '', abnormal_reason: '', is_change: 0, change_plan_time: '' }
-      //       /* 复制一份 nodeTemplateMapList：①用于对比是否改变过值 ②独立数据，不会随组件改变 */
-      //       obj.nodeList_0 = []
-      //       item[x].map(function (node) {
-      //         node.item_node_change = Object.assign({}, item_node_change)
-      //         obj.nodeList_0.push(Object.assign({}, node))
+      //       item[x].map(function (data) {
+      //         const { first_plant_enddate } = data
+      //         //                         提报时的时间                            调整/异常原因         是否调整       调整后的时间
+      //         const item_node_change = { frist_plan_time: first_plant_enddate, change_remaark: '', is_change: 0, change_plan_time: '' }
+      //         data.item_node_change = item_node_change
       //       })
       //     }
       //   }
-      //   arr.push(obj)
       // })
-      // state.next_itemMapList = arr // 项目节点信息
+      // state.next_itemMapList = itemMapList // 项目节点信息
       // /* 路由跳转 */
       // that.$router.push({ name: '生成' })
+      // state.isComputed_2 = true
 
       const { projectList, nodeMapList } = state
       const { pageType } = state
       const { datalist, errorObj } = Tool.returnDatalist(projectList, nodeMapList)
-      if (Object.keys(errorObj).length) {
-        /* ----- 报错 ----- */
-        const textArr = []
-        for (const x in errorObj) {
-          const item = errorObj[x]
+      /* 整理报错项目 */
+      const textArr = []
+      for (const x in errorObj) {
+        const item = errorObj[x]
+        if (item.length) {
           textArr.push(`${x}:${item.join('、')}`)
         }
+      }
+      if (textArr.length) {
+        /* ----- 报错 ----- */
         const message = textArr.join('，')
         that.$alert(`请完善 ${message} 后再进行下一步操作`, '', { confirmButtonText: '确定' })
       } else {
@@ -217,35 +200,31 @@ const store = new Vuex.Store({
         const name = '下一步'
         const obj = { type: pageType, datalist }
         const suc = function (res) {
+          // console.log('投产排产节点提报：下一步 ----- ', res)
           // localStorage.setItem('投产排产节点提报：下一步', JSON.stringify(res))
           /* 处理数据 */
           const { itemMapList, nodeMapList } = res
           state.next_nodeMapList = nodeMapList // 表头节点信息
-          const arr = []
-          itemMapList.forEach(function (item) {
-            const obj = {}
+          itemMapList.map(function (item) {
             for (const x in item) {
-              obj[x] = item[x]
               if (x === 'nodeTemplateMapList') {
-                /* 节点异常处理记录 */
-                //                         提报时的时间           调整/异常原因              是否调整        调整后的时间
-                const item_node_change = { frist_plan_time: '', abnormal_reason: '', is_change: 0, change_plan_time: '' }
-                /* 复制一份 nodeTemplateMapList：①用于对比是否改变过值 ②独立数据，不会随组件改变 */
-                obj.nodeList_0 = []
-                item[x].map(function (node) {
-                  node.item_node_change = Object.assign({}, item_node_change)
-                  obj.nodeList_0.push(Object.assign({}, node))
+                item[x].map(function (data) {
+                  const { first_plant_enddate } = data
+                  //                         提报时的时间                            调整/异常原因         是否调整       调整后的时间
+                  const item_node_change = { frist_plan_time: first_plant_enddate, change_remaark: '', is_change: 0, change_plan_time: '' }
+                  data.item_node_change = item_node_change
                 })
               }
             }
-            arr.push(obj)
           })
-          state.next_itemMapList = arr // 项目节点信息
+          state.next_itemMapList = itemMapList // 项目节点信息
           /* 路由跳转 */
           that.$router.push({ name: '生成' })
+          state.isComputed_2 = true
         }
         const loading = '生成中...'
         Api({ name, obj, suc, loading })
+        // console.log(name, obj, suc, loading)
       }
     },
     /**
@@ -255,7 +234,13 @@ const store = new Vuex.Store({
     A_itemCustomNode({ state }, { audit_status, that }) {
       const { pageType, next_itemMapList, next_nodeMapList } = state
       const { itemids, datalist, nameObj = {} } = Tool.submitProving(next_itemMapList, next_nodeMapList)
-      if (Object.keys(nameObj).length) {
+      // console.log('提交的数据 ------ ', datalist, nameObj)
+      /* 报错节点数 */
+      let errorNum = 0
+      for (const x in nameObj) {
+        errorNum += nameObj[x].arr.length
+      }
+      if (errorNum) {
         /* ----- 报错 ----- */
         const textArr = []
         for (const x in nameObj) {
@@ -277,6 +262,7 @@ const store = new Vuex.Store({
           }
           const loading = audit_status === '1' ? '暂存中...' : '提交中...'
           Api({ name, obj, suc, loading })
+          // console.log(name, obj, suc, loading, datalist)
         }
       }
     }
