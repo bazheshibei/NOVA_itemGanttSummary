@@ -193,8 +193,9 @@ const store = new Vuex.Store({
       }
       if (textArr.length) {
         /* ----- 报错 ----- */
-        const message = textArr.join('，')
-        that.$alert(`请完善 ${message} 后再进行下一步操作`, '', { confirmButtonText: '确定' })
+        // const message = textArr.join('，')
+        // that.$alert(`请完善 ${message} 后再进行下一步操作`, '', { confirmButtonText: '确定' })
+        that.$alert('请完成红框标注的节点后再进行下一步操作', '', { confirmButtonText: '确定' })
       } else {
         /* ----- 发起请求 ----- */
         const name = '下一步'
@@ -257,6 +258,17 @@ const store = new Vuex.Store({
           const name = '保存'
           const obj = { type: 1, itemids, audit_type: pageType, datalist: JSON.stringify(datalist), audit_status }
           const suc = function (res) {
+            /* 暂存：打开甘特表列表页 */
+            if (audit_status === '1') {
+              const host = window.location.origin + '/nova/'
+              // eslint-disable-next-line
+              ui("open", {
+                title: '大货甘特表汇总',
+                url: `${host}pages/itemganttsummary/itemGanttSummaryShow.html`,
+                onClose: function () {}
+              })
+            }
+            /* 关闭页面 */
             // eslint-disable-next-line
             dg.close()
           }

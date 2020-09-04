@@ -388,11 +388,6 @@ export default {
 </style>
 
 <style>
-/*** 弹出气泡 ***/
-.el-popover {
-  max-width: 400px !important;
-}
-
 /*** 输入框：报错 ***/
 .errorInput > input {
   color: #F56C6C !important;

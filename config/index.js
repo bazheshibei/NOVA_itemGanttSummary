@@ -59,11 +59,11 @@ module.exports = {
 
   build: {
     // Template for index.html
-    index: path.resolve(__dirname, '../itemGanttSummary/itemGanttSummary.html'),
+    index: path.resolve(__dirname, '../itemganttsummary/itemGanttSummary.html'),
 
     // Paths
     assetsRoot: path.resolve(__dirname, '../itemganttsummary'),
-    assetsSubDirectory: 'static',
+    assetsSubDirectory: 'itemGanttSummary',
     assetsPublicPath: '/nova/pages/itemganttsummary/',
 
     /**

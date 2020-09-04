@@ -159,8 +159,21 @@ td > .cell {
 }
 
 /*** 悬浮框 ***/
+.el-popover {
+  padding: 6px;
+}
+.el-popover > div > input {
+  height: 26px;
+  font-size: 12px !important;
+  display: flex;
+  align-items: center;
+}
+.el-popover > div > .el-input__suffix { /* input 中删除按钮 */
+  margin-top: -6px;
+}
 .comPopover {
   color: #409EFF !important;
+  font-size: 12px !important;
   background: #ecf5ff !important;
   border-color: #b3d8ff !important;
 }
@@ -173,20 +186,6 @@ td > .cell {
 }
 .el-popper > .popper__arrow {
   display: none;
-}
-
-/*** 搜索 ***/
-.el-popover {
-  padding: 6px;
-}
-.el-popover > div > input {
-  height: 26px;
-  font-size: 12px !important;
-  display: flex;
-  align-items: center;
-}
-.el-popover > div > .el-input__suffix { /* input 中删除按钮 */
-  margin-top: -6px;
 }
 
 /*** 分页 ***/

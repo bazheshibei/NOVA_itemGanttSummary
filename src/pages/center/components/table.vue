@@ -185,11 +185,6 @@ export default {
   border-top: 0 !important;
 }
 
-/*** 弹出气泡 ***/
-.el-popover {
-  max-width: 400px !important;
-}
-
 /*** 时间选择器：报错 ***/
 .errorPicker > input {
   color: #F56C6C !important;

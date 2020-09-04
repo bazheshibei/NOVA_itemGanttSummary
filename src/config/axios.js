@@ -46,7 +46,7 @@ const HTTP = function (param) {
     loadingInstance = Loading.service({ text: loading })
   }
   /* 发起请求 */
-  Axios({ method, url, data: Qs.stringify(data), timeout: 0 })
+  Axios({ method, url, data: Qs.stringify(data), timeout: 120000 })
     .then(function (res) {
       const { data, msg, status } = res.data
       if (String(status) === '0') {
@@ -59,9 +59,12 @@ const HTTP = function (param) {
       }
     })
     .catch(function (res) {
-      // // eslint-disable-next-line
-      // MessageBox({ title: '数据异常', message: msg, type: 'warning', closeOnClickModal: false, closeOnPressEscape: false, callback() { dg.close() } })
-      err(res)
+      if (err) {
+        err(res)
+      } else {
+        // eslint-disable-next-line
+        MessageBox({ title: '请求超时', message: '请重新提交', type: 'warning', closeOnClickModal: false, closeOnPressEscape: false, callback() {} })
+      }
       /* 以服务的方式调用的 Loading 需要异步关闭 */
       if (loading) {
         loadingInstance.close()

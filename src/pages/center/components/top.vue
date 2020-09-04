@@ -7,7 +7,8 @@
       <!-- 业务类型 -->
       <div class="formTextBox" style="flex: 0;">
         <div class="formText">
-          <span>业务类型：</span>大货项目 -- {{{ '1': '投产前节点', '2': '排产节点' }[pageType]}}提报&nbsp;&nbsp;
+          <span>业务类型：</span>
+          <span>{{pageObj[pageType].text}}&nbsp;&nbsp;</span>
         </div>
       </div>
       <!-- 本次提报项目 -->
@@ -35,7 +36,16 @@
 import { mapState, mapGetters } from 'vuex'
 export default {
   data() {
-    return {}
+    return {
+      pageObj: {
+        '1': { text: '大货项目 -- 投产前节点提报', url: 'pages/itemganttsummary/choiceItemInfolistGoods.jsp' },
+        '2': { text: '大货项目 -- 排产节点提报', url: 'pages/itemganttsummary/choiceItemInfolistGoods.jsp' },
+        '3': { text: '开发项目 -- 一次样节点计划提报', url: 'pages/iteminfo/itemInfolistDevelopment.jsp' },
+        '4': { text: '开发项目 -- 二次样节点计划提报', url: 'pages/iteminfo/itemInfolistDevelopment.jsp' },
+        '5': { text: '开发项目 -- 销售样节点计划提报', url: 'pages/iteminfo/itemInfolistDevelopment.jsp' },
+        '6': { text: '面料项目', url: 'pages/material_item_info/material_item_infolist.jsp' }
+      }
+    }
   },
   created() {},
   computed: {
@@ -47,13 +57,12 @@ export default {
      * [选择项目]
      */
     chooseProject() {
-      const that = this
       /* 添加数据 */
-      const { itemids } = that
+      const { itemids, pageType, pageObj } = this
       const host = window.location.origin + '/nova/'
       // eslint-disable-next-line
       win({
-        url: host + `pages/itemganttsummary/choiceItemInfolistGoods.jsp?itemids=${itemids}`,
+        url: host + pageObj[pageType].url + `?itemids=${itemids}`,
         param: {},
         width: 1100,
         height: 550,
