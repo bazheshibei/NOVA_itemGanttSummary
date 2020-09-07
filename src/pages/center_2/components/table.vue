@@ -25,7 +25,7 @@
         </template>
       </el-table-column>
 
-      <el-table-column v-for="item in next_nodeMapList" :key="'node_' + item.node_id" :label="item.node_name" :column-key="item.node_id" width="150">
+      <el-table-column v-for="item in next_nodeMapList" :key="'node_' + item.node_id" :label="item.node_name" :column-key="item.node_id" width="130">
         <template slot-scope="scope">
           <div v-if="scope.row[item.node_id]">
             <!-- 计划完成 -->
@@ -33,7 +33,7 @@
               <!-- 计划完成：用户提报 -->
               <div v-if="scope.row[item.node_id].submit_type === 2">
                 <el-popover popper-class="comPopover" :visible-arrow="false" placement="left" trigger="focus" :content="scope.row[item.node_id].maxMinText">
-                  <el-input class="comInput" :class="scope.row[item.node_id].error ? 'errorInput' : ''" slot="reference" size="mini" placeholder="请输入日期"
+                  <el-input class="comTimeInput" :class="scope.row[item.node_id].error ? 'errorInput' : ''" slot="reference" size="mini" placeholder="请输入日期" maxlength="10"
                     v-model="scope.row[item.node_id].first_plant_enddate" @blur="blur_table('first_plant_enddate', $event, scope.row, item.node_id, item.node_name)"
                   ></el-input>
                 </el-popover>
@@ -51,7 +51,7 @@
             <!-- 本次调整 -->
             <span v-else>
               <div v-if="scope.row[item.node_id].submit_type === 2 && scope.row[item.node_id].error">
-                <el-input class="comInput" :class="scope.row[item.node_id].error ? 'errorInput' : ''" size="mini" placeholder="请输入异常原因"
+                <el-input class="comTimeInput" :class="scope.row[item.node_id].error ? 'errorInput' : ''" size="mini" placeholder="请输入异常原因" type="textarea"
                   v-model="text[`${scope.$index}_${item.node_id}`]" @blur="blur_table('change_remaark', $event, scope.row, item.node_id, item.node_name)"
                 ></el-input>
               </div>
@@ -91,8 +91,8 @@
         </div>
         <div class="lineLabel">调整后日期：</div>
         <div class="lineText">
-          <el-input class="comInput" :class="d_data.error && d_data.is_change === 1 ? 'errorInput' : ''" slot="reference" size="mini" placeholder="请输入日期"
-            :disabled="d_data.is_change === 0 ? true : false"
+          <el-input class="comTimeInput" :class="d_data.error && d_data.is_change === 1 ? 'errorInput' : ''" slot="reference" size="mini" placeholder="请输入日期"
+            :disabled="d_data.is_change === 0 ? true : false" maxlength="10"
             v-model="d_data.change_plan_time" @blur="blur_dialog('change_plan_time')"
           ></el-input>
         </div>
@@ -328,74 +328,5 @@ export default {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-}
-
-/*** 表格容器 ***/
-.deleteBtn { /* 删除按钮 */
-  margin: 5px 0;
-}
-.comInput {
-  width: 125px;
-  margin: 2px 0;
-}
-.warningIcon { /* 报错 */
-  color: #F56C6C;
-  font-size: 16px;
-}
-.red {
-  color: #F56C6C;
-}
-.hover {
-  cursor: pointer;
-}
-
-/*** 时间选择器 ***/
-.comDatePicker {
-  width: 125px;
-  margin: 2px 0;
-}
-
-/*** 弹出层 ***/
-.lineBox {
-  font-size: 12px;
-  border-bottom: 1px solid #E4E7ED;
-  border-left: 1px solid #E4E7ED;
-  display: flex;
-  align-items: center;
-  flex: 1;
-}
-.lineBox:first-child {
-  border-top: 1px solid #E4E7ED;
-}
-.lineLabel {
-  width: 110px;
-  min-width: 110px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-}
-.lineText {
-  min-height: 35px;
-  padding: 0 6px;
-  border-right: 1px solid #E4E7ED;
-  display: flex;
-  align-items: center;
-  flex: 1;
-}
-.comInput2 {
-  flex: 1;
-}
-</style>
-
-<style>
-/*** 输入框：报错 ***/
-.errorInput > input {
-  color: #F56C6C !important;
-  border-color: #F56C6C !important;
-}
-
-/*** 弹出层 ***/
-.comDialog > .el-dialog > .el-dialog__body {
-  padding: 10px 20px !important;
 }
 </style>

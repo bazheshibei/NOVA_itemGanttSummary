@@ -11,12 +11,12 @@
           <el-popconfirm :title="'确定要删除 ' + scope.row.item_name + ' 吗？'"
             icon="el-icon-info" iconColor="red" confirmButtonType="text" @onConfirm="deleteData(scope.$index)"
           >
-            <el-tag class="deleteBtn" slot="reference" size="mini" plain>删除</el-tag>
+            <el-tag class="comDeleteBtn" slot="reference" size="mini" plain>删除</el-tag>
           </el-popconfirm>
         </template>
       </el-table-column>
       <!-- 项目名称 -->
-      <el-table-column label="项目名称" width="110">
+      <el-table-column label="项目名称" width="100">
         <template slot-scope="scope">
           <el-popover popper-class="comPopover" :visible-arrow="false" placement="right" trigger="hover" :content="scope.row.itemInformation">
             <span slot="reference">{{scope.row.item_name}}</span>
@@ -24,15 +24,15 @@
         </template>
       </el-table-column>
       <!-- 下单日期 -->
-      <el-table-column prop="order_time" label="下单日期" width="110"></el-table-column>
+      <el-table-column prop="order_time" label="下单日期" width="100"></el-table-column>
       <!-- 客人交期 -->
-      <el-table-column prop="deliver_date" label="客人交期" width="110"></el-table-column>
+      <el-table-column prop="deliver_date" label="客人交期" width="100"></el-table-column>
 
-      <el-table-column v-for="item in nodeMapList" :key="'node_' + item.node_id" :label="item.node_name" width="170">
+      <el-table-column v-for="item in nodeMapList" :key="'node_' + item.node_id" :label="item.node_name" width="130">
         <template slot-scope="scope">
           <el-input v-if="scope.row[item.node_id] && (typeof scope.row[item.node_id].first_plant_enddate === 'string' || typeof scope.row[item.node_id].first_plant_enddate === 'object')"
-            class="comInput" :class="scope.row[item.node_id].is_quote === 1 && !scope.row[item.node_id].first_plant_enddate ? 'errorPicker' : ''" slot="reference" size="mini"
-            :placeholder="scope.row[item.node_id].is_quote === 1 ? '请输入日期' : '请输入日期或 /'"
+            class="comTimeInput" :class="scope.row[item.node_id].is_quote === 1 && !scope.row[item.node_id].first_plant_enddate ? 'errorInput' : ''" slot="reference" size="mini"
+            :placeholder="scope.row[item.node_id].is_quote === 1 ? '请输入日期' : '请输入日期或 /'" maxlength="10"
             v-model="scope.row[item.node_id].first_plant_enddate" @blur="blur(scope.$index, item.node_id)"
           ></el-input>
           <span v-else>--</span>
@@ -167,27 +167,7 @@ export default {
   flex-direction: column;
   justify-content: space-between;
 }
-
-/*** 表格容器 ***/
-.deleteBtn { /* 删除按钮 */
-  margin: 5px 0;
-  cursor: pointer;
-}
-
-.comInput {
-  width: 125px;
-  margin: 2px 0;
-}
-</style>
-
-<style>
 .comTable {
   border-top: 0 !important;
-}
-
-/*** 时间选择器：报错 ***/
-.errorPicker > input {
-  color: #F56C6C !important;
-  border-color: #F56C6C !important;
 }
 </style>
