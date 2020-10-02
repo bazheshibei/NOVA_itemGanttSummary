@@ -25,13 +25,13 @@
         </template>
       </el-table-column>
 
-      <el-table-column v-for="item in next_nodeMapList" :key="'node_' + item.node_id" :label="item.node_name" :column-key="item.node_id" width="130">
+      <el-table-column v-for="item in next_nodeMapList" :key="'node_' + item.node_id" :label="item.node_name" :column-key="item.node_id" width="140">
         <template slot-scope="scope">
           <div v-if="scope.row[item.node_id]">
             <!-- 计划完成 -->
             <div v-if="!(scope.row.index % 2)">
               <!-- 计划完成：用户提报 -->
-              <div v-if="scope.row[item.node_id].submit_type === 2">
+              <div v-if="String(scope.row[item.node_id].submit_type) === '2' || scope.row[item.node_id].otherType === 1">
                 <el-popover popper-class="comPopover" :visible-arrow="false" placement="left" trigger="focus" :content="scope.row[item.node_id].maxMinText">
                   <el-input class="comTimeInput" :class="scope.row[item.node_id].error ? 'errorInput' : ''" slot="reference" size="mini" placeholder="请输入日期" maxlength="10"
                     v-model="scope.row[item.node_id].first_plant_enddate" @blur="blur_table('first_plant_enddate', $event, scope.row, item.node_id, item.node_name)"
@@ -39,7 +39,7 @@
                 </el-popover>
               </div>
               <!-- 计划完成：系统计算 -->
-              <div class="hover" v-if="scope.row[item.node_id].submit_type === 1">
+              <div class="hover" v-if="String(scope.row[item.node_id].submit_type) === '1' && scope.row[item.node_id].otherType !== 1">
                 <el-popover popper-class="comPopover" :visible-arrow="false" placement="left" trigger="hover" :content="scope.row[item.node_id].maxMinText">
                   <p slot="reference" @click="edit(scope.row, item.node_id, item.node_name)">
                     <span :class="scope.row[item.node_id].error ? 'red' : ''">{{scope.row[item.node_id].first_plant_enddate}}</span>
@@ -189,6 +189,8 @@ export default {
         /* ----- 本次调整 ----- */
         const node = next_itemMapList[(index - 1) / 2][nodeId]
         node.item_node_change.change_remaark = value
+        this.$store.commit('saveData', { name: 'changeIndexId', obj: `${index / 2}_${nodeId}_${nodeName}` })
+        this.$store.commit('saveData', { name: 'isComputed_2', obj: true })
       }
     },
     /**

@@ -28,7 +28,7 @@
       <!-- 客人交期 -->
       <el-table-column prop="deliver_date" label="客人交期" width="100"></el-table-column>
 
-      <el-table-column v-for="item in nodeMapList" :key="'node_' + item.node_id" :label="item.node_name" width="130">
+      <el-table-column v-for="item in nodeMapList" :key="'node_' + item.node_id" :label="item.node_name" width="140">
         <template slot-scope="scope">
           <el-input v-if="scope.row[item.node_id] && (typeof scope.row[item.node_id].first_plant_enddate === 'string' || typeof scope.row[item.node_id].first_plant_enddate === 'object')"
             class="comTimeInput" :class="scope.row[item.node_id].is_quote === 1 && !scope.row[item.node_id].first_plant_enddate ? 'errorInput' : ''" slot="reference" size="mini"

@@ -4,6 +4,7 @@ import Vue from 'vue'
 import Vuex from 'vuex'
 import Api from '@/config/api'
 import Tool from './tool.js'
+import { Loading } from 'element-ui'
 Vue.use(Vuex)
 
 const store = new Vuex.Store({
@@ -35,6 +36,7 @@ const store = new Vuex.Store({
       if (isComputed_2) {
         const arr = Tool.next_list(next_itemMapList, isComputed_2, changeIndexId)
         state.isComputed_2 = false
+        // console.log('第二页计算数据 ----- ', arr)
         return arr
       }
     },
@@ -258,19 +260,23 @@ const store = new Vuex.Store({
           const name = '保存'
           const obj = { type: 1, itemids, audit_type: pageType, datalist: JSON.stringify(datalist), audit_status }
           const suc = function (res) {
-            /* 暂存：打开甘特表列表页 */
-            if (audit_status === '1') {
-              const host = window.location.origin + '/nova/'
+            const loading = Loading.service({ text: audit_status === '1' ? '暂存成功' : '提交成功', spinner: 'el-icon-circle-check' })
+            setTimeout(() => {
+              loading.close()
+              /* 暂存：打开甘特表列表页 */
+              if (audit_status === '1') {
+                const host = window.location.origin + '/nova/'
+                // eslint-disable-next-line
+                ui("open", {
+                  title: '大货甘特表汇总',
+                  url: `${host}pages/itemganttsummary/itemGanttSummaryShow.html`,
+                  onClose: function () {}
+                })
+              }
+              /* 关闭页面 */
               // eslint-disable-next-line
-              ui("open", {
-                title: '大货甘特表汇总',
-                url: `${host}pages/itemganttsummary/itemGanttSummaryShow.html`,
-                onClose: function () {}
-              })
-            }
-            /* 关闭页面 */
-            // eslint-disable-next-line
-            dg.close()
+              dg.close()
+            }, 1000)
           }
           const loading = audit_status === '1' ? '暂存中...' : '提交中...'
           Api({ name, obj, suc, loading })
