@@ -18,7 +18,9 @@
 </template>
 
 <script>
-import ComTable from './components/table.vue' //   表格
+import { mapState } from 'vuex'
+import Dev from '@/store/dev.js' //              本地开发代码
+import ComTable from './components/table.vue' // 表格
 export default {
   components: { ComTable },
   data() {
@@ -27,34 +29,16 @@ export default {
       scrollTop: 0
     }
   },
+  computed: {
+    ...mapState(['nowCodeType', 'codeObj'])
+  },
   created() {
     /** 计算：表格高度 **/
     this._countHeight()
-
-    // /* 表格类型 */
-    // const local = JSON.parse(localStorage.getItem('NOVA_itemGanttType')) || {}
-    // const typeObj = { '1': '大货甘特表汇总', '1.1': '排产前节点', '1.2': '投产节点', '2': '大货面料甘特表汇总', '3': '大货工厂甘特表' }
-    // const { pageType = '1' } = local
-    // const pageTypeText = typeObj[pageType] || ''
-    // this.$store.commit('saveData', { name: 'pageType', obj: pageType })
-    // this.$store.commit('saveData', { name: 'pageTypeText', obj: pageTypeText })
-    //
-    // /* 开发：直接调用下一步的回调数据 */
-    // const { itemMapList, nodeMapList } = JSON.parse(localStorage.getItem('投产排产节点提报：下一步'))
-    // this.$store.commit('saveData', { name: 'next_nodeMapList', obj: nodeMapList })
-    // itemMapList.map(function (item) {
-    //   for (const x in item) {
-    //     if (x === 'nodeTemplateMapList') {
-    //       item[x].map(function (data) {
-    //         const { first_plant_enddate } = data
-    //         //                         提报时的时间                            调整/异常原因         是否调整       调整后的时间
-    //         const item_node_change = { frist_plan_time: first_plant_enddate, change_remaark: '', is_change: 0, change_plan_time: '' }
-    //         data.item_node_change = item_node_change
-    //       })
-    //     }
-    //   }
-    // })
-    // this.$store.commit('saveData', { name: 'next_itemMapList', obj: itemMapList })
+    /** 本地开发代码 **/
+    if (this.nowCodeType === 'Dev') {
+      Dev.page2Created({ that: this })
+    }
   },
 
   methods: {
@@ -113,6 +97,5 @@ export default {
   padding: 2px 15px;
   display: flex;
   justify-content: flex-end;
-  /* border-top: 1px solid #EBEEF5; */
 }
 </style>

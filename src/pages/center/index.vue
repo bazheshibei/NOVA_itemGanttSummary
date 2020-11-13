@@ -21,8 +21,8 @@
 </template>
 
 <script>
-import ComTop from './components/top.vue' // 下拉框
-import ComTable from './components/table.vue' //   表格
+import ComTop from './components/top.vue' //     下拉框
+import ComTable from './components/table.vue' // 表格
 export default {
   components: { ComTop, ComTable },
   data() {

@@ -60,15 +60,9 @@ export default {
       /* 添加数据 */
       const { itemids, pageType, pageObj } = this
       const host = window.location.origin + '/nova/'
+      const url = host + pageObj[pageType].url + `?itemids=${itemids}`
       // eslint-disable-next-line
-      win({
-        url: host + pageObj[pageType].url + `?itemids=${itemids}`,
-        param: {},
-        width: 1100,
-        height: 550,
-        title: '选择项目',
-        onClose: function () {}
-      })
+      win({ url, param: {}, width: 1100, height: 550, title: '选择项目', onClose: function () {} })
     },
     /**
      * [创建表格]

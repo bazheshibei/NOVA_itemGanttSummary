@@ -30,9 +30,8 @@
 
       <el-table-column v-for="item in nodeMapList" :key="'node_' + item.node_id" :label="item.node_name" width="140">
         <template slot-scope="scope">
-          <el-input v-if="scope.row[item.node_id] && (typeof scope.row[item.node_id].first_plant_enddate === 'string' || typeof scope.row[item.node_id].first_plant_enddate === 'object')"
-            class="comTimeInput" :class="scope.row[item.node_id].is_quote === 1 && !scope.row[item.node_id].first_plant_enddate ? 'errorInput' : ''" slot="reference" size="mini"
-            :placeholder="scope.row[item.node_id].is_quote === 1 ? '请输入日期' : '请输入日期或 /'" maxlength="10"
+          <el-input v-if="_isShowInput(scope.row, item)"
+            class="comTimeInput" slot="reference" size="mini" placeholder="请输入日期或 /" maxlength="10"
             v-model="scope.row[item.node_id].first_plant_enddate" @blur="blur(scope.$index, item.node_id)"
           ></el-input>
           <span v-else>--</span>
@@ -45,12 +44,12 @@
 
 <script>
 import { mapState } from 'vuex'
+import Tool from '@/store/tool.js'
 export default {
   created() {
     /** 计算：表格高度 **/
     this._countHeight()
   },
-
   data() {
     return {
       value1: '',
@@ -61,19 +60,25 @@ export default {
     ...mapState(['projectList', 'nodeMapList'])
   },
   methods: {
-    blur(index, name) {
+    /**
+     * [输入框失焦]
+     * @param {[Int]}    index   项目索引
+     * @param {[String]} node_id 节点ID
+     */
+    blur(index, node_id) {
       const { projectList } = this
-      const time = this._toggleTime(projectList[index][name].first_plant_enddate)
+      const time = Tool._toggleTime(projectList[index][node_id].first_plant_enddate)
       const { order_time, deliver_date } = projectList[index]
       const time_1 = new Date(order_time).getTime()
       const time_2 = new Date(deliver_date).getTime()
       const num = new Date(time).getTime()
-      if ((time_1 <= num && num <= time_2) || (projectList[index][name].is_quote === 0 && time === '/') || time === '') {
-        // (在区间内) || (节点没被引用 && 不填) || (没输入时间)
-        this.projectList[index][name].first_plant_enddate = time
+      if ((time_1 <= num && num <= time_2) || time === '/' || time === '') {
+        /* 保存日期：(在区间内) || 不填 || 没输入时间 */
+        this.projectList[index][node_id].first_plant_enddate = time
       } else {
+        /* 重置日期 */
         this.$message.error('请输入 下单日期 和 客人交期 之间的时间')
-        this.projectList[index][name].first_plant_enddate = ''
+        this.projectList[index][node_id].first_plant_enddate = ''
       }
     },
     /**
@@ -86,56 +91,22 @@ export default {
       /** 保存数据 **/
       this.$store.commit('saveData', { name: 'projectList', obj: projectList })
     },
-    _toggleTime(time) {
-      if (time === '/') {
-        return time
-      } if (time) {
-        const [three, two, one] = time.split(/[-//.]/g).reverse()
-        /* 处理：年 */
-        let year = parseInt(new Date().getFullYear()) // 年 {[Int]}
-        if (!isNaN(parseInt(one))) {
-          const str = String(one).trim()
-          year = parseInt(String(year).slice(0, -1 * str.length) + str)
+    /**
+     * [是否：显示input]
+     * @param  {[Object]}  row  表格单行数据
+     * @param  {[Object]}  item 节点信息
+     * @return {[Boolean]}      是否显示
+     */
+    _isShowInput(row, item) {
+      const node = row[item.node_id]
+      let status = false
+      if (node) { // 有此节点
+        const { first_plant_enddate } = node
+        if (typeof first_plant_enddate === 'string' || typeof first_plant_enddate === 'object') { // 时间 === 字符串 || null
+          status = true
         }
-        /* 处理：月 */
-        let addYear = 0 // 增加的年份 {[Int]}
-        let month = isNaN(parseInt(two)) ? 1 : parseInt(two) // 月 {[Int]}
-        for (let i = 0; ; i++) {
-          if (month > 12) {
-            addYear++
-            month -= 12
-          } else {
-            break
-          }
-        }
-        year = year + addYear
-        /* 处理：日 */
-        let year_2 = month < 12 ? year : year + 1
-        let month_2 = month < 12 ? month + 1 : month + 1 - 12
-        let day = isNaN(parseInt(three)) ? 1 : parseInt(three) // 日 {[Int]}
-        for (let i = 0; ; i++) {
-          const maxDay = new Date(new Date(`${year_2}-${month_2}`).getTime() - 1000 * 60 * 60 * 24).getDate()
-          if (day > maxDay) {
-            day -= maxDay
-            month++
-            month_2++
-            if (month > 12) {
-              month -= 12
-              year += 1
-              year_2 += 1
-            }
-            if (month_2 > 12) {
-              month_2 -= 12
-            }
-          } else {
-            break
-          }
-        }
-        /* 整合 */
-        return `${year}-${'00'.slice(0, -1 * String(month).length) + month}-${'00'.slice(0, -1 * String(day).length) + day}`
-      } else {
-        return ''
       }
+      return status
     },
     /**
      * [计算：表格高度]
