@@ -32,12 +32,23 @@ export default {
     }
   },
   created() {
-    const { type = 1 } = JSON.parse(localStorage.getItem('sumittcpcGanttSummaryType') || '{}')
-    this.$store.commit('saveData', { name: 'pageType', obj: type })
-    /** 计算：表格高度 **/
+    // type 默认取空值：面料、开发不需要传这个
+    const { type = '' } = JSON.parse(localStorage.getItem('sumittcpcGanttSummaryType') || '{}')
+    const pageType = String(type)
+    let pageTitle = ''
+    if (pageType === '1' || pageType === '2') {
+      pageTitle = '大货'
+    } else if (pageType === '3' || pageType === '4' || pageType === '5') {
+      pageTitle = '开发'
+    } else if (pageType === '6') {
+      pageTitle = '面料'
+    }
+    this.$store.commit('saveData', { name: 'pageType', obj: pageType })
+    this.$store.commit('saveData', { name: 'pageTitle', obj: pageTitle })
+    // /** 计算：表格高度 **/
     this._countHeight()
     /** 请求：页面初始化数据 **/
-    this.$store.dispatch('A_getItemNodeTemple', {})
+    this.$store.dispatch('A_getItemNodeTemple', { status: '初始化', that: this })
 
     try {
       /* 平台方法 */

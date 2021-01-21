@@ -14,9 +14,49 @@
         </template>
       </el-table-column>
       <!-- 下单日期 -->
-      <el-table-column prop="order_time" label="下单日期" width="100"></el-table-column>
+      <el-table-column width="100">
+        <template slot="header" slot-scope="scope">
+          <p v-if="pageTitle === '面料'">面料名称</p>
+          <p v-else-if="pageTitle === '开发'">面料下单日期</p>
+          <p v-else>下单日期</p>
+        </template>
+        <template slot-scope="scope">
+          <p v-if="pageTitle === '面料'">{{scope.row.material_describe}}</p>
+          <p v-else-if="pageTitle === '开发'">{{scope.row.kf_receive_material_time}}</p>
+          <p v-else>{{scope.row.order_time}}</p>
+        </template>
+      </el-table-column>
       <!-- 客人交期 -->
-      <el-table-column prop="deliver_date" label="客人交期" width="100"></el-table-column>
+      <el-table-column width="100">
+        <template slot="header" slot-scope="scope">
+          <p v-if="pageTitle === '面料'">面料下达日期</p>
+          <p v-else-if="pageTitle === '开发'">款式图下达日期</p>
+          <p v-else>客人交期</p>
+        </template>
+        <template slot-scope="scope">
+          <p v-if="pageTitle === '面料'">{{scope.row.matter_release_time}}</p>
+          <p v-else-if="pageTitle === '开发'">{{scope.row.kf_order_time}}</p>
+          <p v-else>{{scope.row.deliver_date}}</p>
+        </template>
+      </el-table-column>
+      <!-- 一次样意见 -->
+      <el-table-column v-if="pageTitle === '开发' && String(pageType) === '4'" label="一次样意见" width="100">
+        <template slot-scope="scope">
+          <p>{{scope.row.ycyyjdate}}</p>
+        </template>
+      </el-table-column>
+      <!-- 二次样意见 -->
+      <el-table-column v-if="pageTitle === '开发' && String(pageType) === '5'" label="二次样意见" width="100">
+        <template slot-scope="scope">
+          <p>{{scope.row.ecyyjdate}}</p>
+        </template>
+      </el-table-column>
+      <!-- 面料确认时间 -->
+      <el-table-column v-if="pageTitle === '开发' && (String(pageType) === '4' || String(pageType) === '5')" label="面料确认时间" width="100">
+        <template slot-scope="scope">
+          <p>{{scope.row.mlqrdate}}</p>
+        </template>
+      </el-table-column>
       <!-- 计划完成 / 本次调整 -->
       <el-table-column width="80">
         <template slot-scope="scope">
@@ -30,8 +70,14 @@
           <div v-if="scope.row[item.node_id]">
             <!-- 计划完成 -->
             <div v-if="!(scope.row.index % 2)">
+              <!-- 计划完成：文本节点 -->
+              <div v-if="_isContentNode(scope.row, item)">
+                <el-input class="comTimeInput" size="mini" placeholder="请输入文字内容" maxlength="200"
+                  v-model="scope.row[item.node_id].first_plant_enddate" @blur="blur_table('first_plant_enddate', $event, scope.row, item.node_id, item.node_name)"
+                ></el-input>
+              </div>
               <!-- 计划完成：用户提报 -->
-              <div v-if="_isInputEdit(scope.row, item)">
+              <div v-else-if="_isInputEdit(scope.row, item)">
                 <el-popover popper-class="comPopover" :visible-arrow="false" placement="left" trigger="focus" :content="scope.row[item.node_id].maxMinText">
                   <el-input class="comTimeInput" :class="scope.row[item.node_id].error ? 'errorInput' : ''" slot="reference" size="mini"
                     placeholder="请输入日期或 /" maxlength="10"
@@ -40,7 +86,7 @@
                 </el-popover>
               </div>
               <!-- 计划完成：系统计算 -->
-              <div class="hover" v-if="_isAlertEdit(scope.row, item)">
+              <div class="hover" v-else-if="_isAlertEdit(scope.row, item)">
                 <el-popover popper-class="comPopover" :visible-arrow="false" placement="left" trigger="hover" :content="scope.row[item.node_id].maxMinText">
                   <p slot="reference" @click="edit(scope.row, item.node_id, item.node_name)">
                     <span :class="scope.row[item.node_id].error ? 'red' : ''">{{scope.row[item.node_id].first_plant_enddate}}</span>
@@ -51,16 +97,21 @@
             </div>
             <!-- 本次调整 -->
             <span v-else>
-              <div v-if="_isShowInput(scope.row, item)">
-                <el-input class="comTimeInput" :class="_isShowInput(scope.row, item) ? 'errorInput' : ''" size="mini" placeholder="请输入异常原因" type="textarea"
+              <div v-if="_isContentNode(scope.row, item)">
+                <el-input class="comTimeInput" size="mini" placeholder="请输入文字内容" type="textarea" rows="3" :resize="'none'" maxlength="200"
                   v-model="text[`${scope.$index}_${item.node_id}`]" @blur="blur_table('change_remaark', $event, scope.row, item.node_id, item.node_name)"
                 ></el-input>
               </div>
-              <div v-else style="text-align: left;">
-                <p v-if="_isShowText(scope.row, item)">
+              <div v-else-if="_isShowInput(scope.row, item)">
+                <el-input class="comTimeInput" :class="_isShowInput(scope.row, item) ? 'errorInput' : ''" size="mini" placeholder="请输入异常原因" type="textarea" rows="3" :resize="'none'" maxlength="200"
+                  v-model="text[`${scope.$index}_${item.node_id}`]" @blur="blur_table('change_remaark', $event, scope.row, item.node_id, item.node_name)"
+                ></el-input>
+              </div>
+              <div v-else-if="_isShowText(scope.row, item)" style="text-align: left;">
+                <p>
                   调整后：{{scope.row[item.node_id].item_node_change.change_plan_time || '未调整'}}
                 </p>
-                <p v-if="_isShowText(scope.row, item)">
+                <p>
                   原因：{{scope.row[item.node_id].item_node_change.change_remaark}}
                 </p>
               </div>
@@ -92,7 +143,7 @@
         </div>
         <div class="lineLabel">调整后日期：</div>
         <div class="lineText">
-          <el-input class="comTimeInput" :class="d_data.error && d_data.is_change === 1 ? 'errorInput' : ''" slot="reference" size="mini" placeholder="请输入日期"
+          <el-input class="comTimeInput" :class="d_data.error && d_data.is_change === 1 ? 'errorInput' : ''" slot="reference" size="mini" placeholder="请输入日期或 /"
             :disabled="d_data.is_change === 0 ? true : false" maxlength="10"
             v-model="d_data.change_plan_time" @blur="blur_dialog('change_plan_time')"
           ></el-input>
@@ -114,7 +165,7 @@
           调整/异常原因：
         </div>
         <div class="lineText">
-          <el-input class="comInput2" v-model="d_data.change_remaark" size="mini" placeholder="请填写调整/异常原因"></el-input>
+          <el-input class="comInput2" v-model="d_data.change_remaark" size="mini" placeholder="请填写调整/异常原因" maxlength="200"></el-input>
         </div>
       </div>
       <div class="lineBox" v-if="d_data.is_change === 1">
@@ -153,7 +204,7 @@ export default {
     }
   },
   computed: {
-    ...mapState(['next_itemMapList', 'next_nodeMapList', 'tableArr', 'tableActive', 'pageTypeText', 'isSubmit', 'isComputed_2']),
+    ...mapState(['next_itemMapList', 'next_nodeMapList', 'tableArr', 'tableActive', 'pageTypeText', 'isSubmit', 'isComputed_2', 'pageType', 'pageTitle']),
     ...mapGetters(['next_list'])
   },
   methods: {
@@ -172,13 +223,19 @@ export default {
       if (name === 'first_plant_enddate') {
         /* ----- 计划完成 ----- */
         const node = next_itemMapList[index / 2][nodeId]
-        const { oldTime } = node
-        value = Tool._toggleTime(value)
-        const is_change = oldTime !== value ? 1 : 0
-        node.item_node_change.is_change = is_change
-        node.first_plant_enddate = value
-        node.item_node_change.change_plan_time = is_change === 1 ? value : ''
-        node.isComputedOther = true
+        const { oldTime, node_content_type } = node
+        if (node_content_type === 'time' || node_content_type !== 'content') { /* 时间节点 */
+          value = Tool._toggleTime(value)
+          const is_change = oldTime !== value ? 1 : 0
+          node.item_node_change.is_change = is_change
+          node.first_plant_enddate = value
+          node.item_node_change.change_plan_time = is_change === 1 ? value : ''
+          node.isComputedOther = true
+        } else if (node_content_type === 'content') { /* 文本节点 */
+          node.item_node_change.is_change = 0
+          node.first_plant_enddate = value
+          node.item_node_change.change_plan_time = ''
+        }
         this.$store.commit('saveData', { name: 'changeIndexId', obj: `${index / 2}_${nodeId}_${nodeName}` })
         this.$store.commit('saveData', { name: 'isComputed_2', obj: true })
       } else if (name === 'change_remaark') {
@@ -271,8 +328,7 @@ export default {
       node.error = error
       node.isComputedOther = isComputedOther
       node.item_node_change = Object.assign({}, { frist_plan_time, change_remaark, is_change, change_plan_time })
-      // 微信截图         报错的时间，没存文字
-      if (is_change === 0) {
+      if (is_change === 0 && !error) {
         node.first_plant_enddate = first_plant_enddate
         node.item_node_change = Object.assign({}, { frist_plan_time, change_remaark: '', is_change, change_plan_time: '' })
       }
@@ -284,13 +340,38 @@ export default {
      * [表格：合并行]
      */
     objectSpanMethod({ row, column, rowIndex, columnIndex }) {
-      if (columnIndex < 3) {
-        if (!(rowIndex % 2)) {
-          return { rowspan: 2, colspan: 1 }
-        } else {
-          return { rowspan: 0, colspan: 0 }
+      const { pageTitle, pageType } = this
+      if (pageTitle === '开发' && (String(pageType) === '4' || String(pageType) === '5')) {
+        if (columnIndex < 5) {
+          if (!(rowIndex % 2)) {
+            return { rowspan: 2, colspan: 1 }
+          } else {
+            return { rowspan: 0, colspan: 0 }
+          }
+        }
+      } else {
+        if (columnIndex < 3) {
+          if (!(rowIndex % 2)) {
+            return { rowspan: 2, colspan: 1 }
+          } else {
+            return { rowspan: 0, colspan: 0 }
+          }
         }
       }
+    },
+    /**
+     * [是否：文本节点]
+     * @param  {[Object]}  row  表格单行数据
+     * @param  {[Object]}  item 节点信息
+     * @return {[Boolean]}      是否显示
+     */
+    _isContentNode(row, item) {
+      const node = row[item.node_id] || {}
+      let status = false
+      if (node.node_content_type === 'content') { // 文本节点
+        status = true
+      }
+      return status
     },
     /**
      * [是否：input修改]
@@ -299,12 +380,10 @@ export default {
      * @return {[Boolean]}      是否显示
      */
     _isInputEdit(row, item) {
-      const node = row[item.node_id]
+      const node = row[item.node_id] || {}
       let status = false
-      if (node) { // 有此节点
-        if (String(node.submit_type) === '2' || node.otherType === 1) { // 用户提报 || 系统计算为空值
-          status = true
-        }
+      if (String(node.submit_type) === '2' || node.otherType === 1) { // 用户提报 || 系统计算为空值
+        status = true
       }
       return status
     },
@@ -315,12 +394,10 @@ export default {
      * @return {[Boolean]}      是否显示
      */
     _isAlertEdit(row, item) {
-      const node = row[item.node_id]
+      const node = row[item.node_id] || {}
       let status = false
-      if (node) {
-        if (String(node.submit_type) === '1' && node.otherType !== 1) { // 系统计算 && 系统计算有值
-          status = true
-        }
+      if (String(node.submit_type) === '1' && node.otherType !== 1) { // 系统计算 && 系统计算有值
+        status = true
       }
       return status
     },
@@ -331,13 +408,11 @@ export default {
      * @return {[Boolean]}      是否显示
      */
     _isShowInput(row, item) {
-      const node = row[item.node_id]
+      const node = row[item.node_id] || {}
       let status = false
-      if (node) {
-        const { submit_type, error, otherType } = node
-        if ((String(submit_type) === '2' && error) || otherType === 1) { // (用户提报 && 日期报错) || 系统计算为空值)
-          status = true
-        }
+      const { submit_type, error, otherType } = node
+      if ((String(submit_type) === '2' && error) || otherType === 1) { // (用户提报 && 日期报错) || 系统计算为空值)
+        status = true
       }
       return status
     },
@@ -348,9 +423,11 @@ export default {
      * @return {[Boolean]}      是否显示
      */
     _isShowText(row, item) {
-      const node = row[item.node_id]
+      const node = row[item.node_id] || {}
+      const { item_node_change = {} } = node
+      const { change_plan_time = '', change_remaark = '' } = item_node_change
       let status = false
-      if (node.item_node_change && node.item_node_change.change_remaark) { // 调整说明
+      if (change_plan_time || change_remaark) { // 调整：时间 || 说明
         status = true
       }
       return status

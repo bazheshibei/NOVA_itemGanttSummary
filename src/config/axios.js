@@ -52,22 +52,22 @@ const HTTP = function (param) {
       if (String(status) === '0') {
         MessageBox({ title: '数据异常', message: msg, type: 'warning', closeOnClickModal: false, closeOnPressEscape: false })
       }
-      suc(data)
       /* 以服务的方式调用的 Loading 需要异步关闭 */
       if (loading) {
         loadingInstance.close()
       }
+      suc(data)
     })
     .catch(function (res) {
+      /* 以服务的方式调用的 Loading 需要异步关闭 */
+      if (loading) {
+        loadingInstance.close()
+      }
       if (err) {
         err(res)
       } else {
         // eslint-disable-next-line
         MessageBox({ title: '请求超时', message: '请重新提交', type: 'warning', closeOnClickModal: false, closeOnPressEscape: false, callback() {} })
-      }
-      /* 以服务的方式调用的 Loading 需要异步关闭 */
-      if (loading) {
-        loadingInstance.close()
       }
     })
 }

@@ -86,10 +86,11 @@ Dev.page2Created = function ({ that }) {
   /* 表格类型 */
   const local = JSON.parse(localStorage.getItem('NOVA_itemGanttType')) || {}
   const typeObj = { '1': '大货甘特表汇总', '1.1': '排产前节点', '1.2': '投产节点', '2': '大货面料甘特表汇总', '3': '大货工厂甘特表' }
-  const { pageType = '1' } = local
+  const { pageType = '4' } = local
   const pageTypeText = typeObj[pageType] || ''
   that.$store.commit('saveData', { name: 'pageType', obj: pageType })
   that.$store.commit('saveData', { name: 'pageTypeText', obj: pageTypeText })
+  that.$store.commit('saveData', { name: 'pageTitle', obj: '' })
   /* 调用下一步的回调数据 */
   const { itemMapList, nodeMapList } = JSON.parse(localStorage.getItem('投产排产节点提报：下一步'))
   that.$store.commit('saveData', { name: 'next_nodeMapList', obj: nodeMapList })
@@ -113,8 +114,8 @@ Dev.page2Created = function ({ that }) {
  * @page 第二页
  */
 Dev.A_itemCustomNode = function (state, audit_status, that) {
-  const { pageType, next_itemMapList, next_nodeMapList } = state
-  const { itemids, datalist, errorObj = {} } = Tool.submitProving(next_itemMapList, next_nodeMapList)
+  const { pageType, pageTitle, next_itemMapList, next_nodeMapList } = state
+  const { itemids, datalist, errorObj = {} } = Tool.submitProving(next_itemMapList, next_nodeMapList, pageTitle)
   /* 报错节点数 */
   let errorNum = 0
   for (const x in errorObj) {

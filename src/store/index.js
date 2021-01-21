@@ -14,7 +14,8 @@ const store = new Vuex.Store({
     nowCodeType: 'Prod', //     当前代码类型
     codeObj: { Dev, Prod }, // 代码类型 { Dev: '开发', Prod: '生产' }
     /* 缓存数据 */
-    pageType: '', //           页面（甘特表）类型
+    pageType: '', //           页面（甘特表）类型: '1', '2'...
+    pageTitle: '', //          页面（甘特表）类型: '大货', '开发', '面料'
     /* 第一页 */
     itemids: '', //            所有项目id
     projectList: [], //        项目列表
@@ -34,9 +35,9 @@ const store = new Vuex.Store({
      * @page 第二页
      */
     next_list(state) {
-      const { next_itemMapList, isComputed_2, changeIndexId } = state
+      const { next_itemMapList, isComputed_2, changeIndexId, pageTitle } = state
       if (isComputed_2) {
-        const arr = Tool.next_list(next_itemMapList, isComputed_2, changeIndexId)
+        const arr = Tool.next_list(next_itemMapList, isComputed_2, changeIndexId, pageTitle)
         state.isComputed_2 = false
         // console.log('第二页计算数据 ----- ', arr)
         return arr
@@ -72,8 +73,8 @@ const store = new Vuex.Store({
      * [请求：页面初始化数据]
      * @page 第一页
      */
-    A_getItemNodeTemple({ state }, { status = '初始化' }) {
-      state.codeObj[state.nowCodeType].A_getItemNodeTemple(state, status)
+    A_getItemNodeTemple({ state }, { status = '初始化', that }) {
+      state.codeObj[state.nowCodeType].A_getItemNodeTemple(state, status, that)
     },
     /**
      * [请求：下一步]

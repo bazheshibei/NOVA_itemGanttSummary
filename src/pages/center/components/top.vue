@@ -22,7 +22,7 @@
           <el-button type="primary" size="mini" @click="createdTable">创建</el-button>
           <span>&nbsp;&nbsp;&nbsp;&nbsp;</span>
           <div class="">
-            <p>系统提示：大货甘特表提报分为以下两步：</p>
+            <p>系统提示：甘特表提报分为以下两步：</p>
             <p>1.先指定主线上需手动提报节点计划。2.系统根据模板规则自动生成全部节点计划。</p>
           </div>
         </div>
@@ -60,7 +60,7 @@ export default {
       /* 添加数据 */
       const { itemids, pageType, pageObj } = this
       const host = window.location.origin + '/nova/'
-      const url = host + pageObj[pageType].url + `?itemids=${itemids}`
+      const url = host + pageObj[pageType].url + `?itemids=${itemids}&type=1`
       // eslint-disable-next-line
       win({ url, param: {}, width: 1100, height: 550, title: '选择项目', onClose: function () {} })
     },

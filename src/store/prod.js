@@ -12,7 +12,7 @@ const Prod = {}
  * [请求：页面初始化数据]
  * @page 第一页
  */
-Prod.A_getItemNodeTemple = function (state, status = '初始化') {
+Prod.A_getItemNodeTemple = function (state, status = '初始化', that) {
   const { pageType, itemids } = state
   let itemIds = itemids
   if (status === '创建') {
@@ -57,6 +57,8 @@ Prod.A_getItemNodeTemple = function (state, status = '初始化') {
       /* 初始化时，直接赋值 */
       state.projectList = itemMapList
     }
+    /** 计算：表格高度 **/
+    that._countHeight()
   }
   Api({ name, obj, loading, suc })
 }
@@ -104,6 +106,7 @@ Prod.A_generateItemGanttSummary = function (state, that) {
           }
         }
       })
+      state.changeIndexId = '' // 重置
       state.next_itemMapList = itemMapList // 项目节点信息
       /* 路由跳转 */
       that.$router.push({ name: '生成' })
@@ -119,8 +122,8 @@ Prod.A_generateItemGanttSummary = function (state, that) {
  * @page 第二页
  */
 Prod.A_itemCustomNode = function (state, audit_status, that) {
-  const { pageType, next_itemMapList, next_nodeMapList } = state
-  const { itemids, datalist, errorObj = {} } = Tool.submitProving(next_itemMapList, next_nodeMapList)
+  const { pageType, pageTitle, next_itemMapList, next_nodeMapList } = state
+  const { itemids, datalist, errorObj = {} } = Tool.submitProving(next_itemMapList, next_nodeMapList, pageTitle)
   /* 报错节点数 */
   let errorNum = 0
   for (const x in errorObj) {
@@ -139,20 +142,20 @@ Prod.A_itemCustomNode = function (state, audit_status, that) {
     if (!datalist.length) {
       that.$alert('没有需要提交的节点', '', { confirmButtonText: '确定', showClose: false })
     } else {
+      const urlObj = { '大货': '', '开发': '#/kaifa', '面料': '#/mianliao' }
       /* ----- 发起请求 ----- */
       const name = '保存'
       const obj = { type: 1, itemids, audit_type: pageType, datalist: JSON.stringify(datalist), audit_status }
       const suc = function (res) {
-        const loading = Loading.service({ text: audit_status === '1' ? '暂存成功' : '提交成功', spinner: 'el-icon-circle-check' })
+        Loading.service({ text: audit_status === '1' ? '暂存成功' : '提交成功', spinner: 'el-icon-circle-check' })
         setTimeout(() => {
-          loading.close()
           /* 暂存：打开甘特表列表页 */
           if (audit_status === '1') {
             const host = window.location.origin + '/nova/'
             // eslint-disable-next-line
             ui("open", {
-              title: '大货甘特表汇总',
-              url: `${host}pages/itemganttsummary/itemGanttSummaryShow.html`,
+              title: `${pageTitle}甘特表汇总`,
+              url: `${host}pages/itemganttsummary/itemGanttSummaryShow.html${urlObj[pageTitle]}`,
               onClose: function () {}
             })
           }
